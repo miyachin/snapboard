@@ -196,7 +196,7 @@ function App() {
         }
         if (currentLine) lines.push(currentLine)
 
-        const startY = padding + slotHeight + 20
+        const startY = padding + slotHeight + 32
         lines.forEach((line, li) => {
           ctx.fillText(line, slotX + slotWidth / 2, startY + li * lineHeight)
         })
