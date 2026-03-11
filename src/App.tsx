@@ -66,7 +66,8 @@ function App() {
     const count = images.length
     const padding = 40
     const gap = 30
-    const captionHeight = 100
+    const hasAnyCaption = images.some(item => item.caption)
+    const captionHeight = hasAnyCaption ? 100 : 0
     const totalGap = gap * (count - 1)
     const availableWidth = CANVAS_WIDTH - padding * 2 - totalGap
     const slotWidth = availableWidth / count
