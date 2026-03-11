@@ -1,8 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 
-const CANVAS_WIDTH = 1920
-const CANVAS_HEIGHT = 1080
 const MAX_IMAGES = 3
+
+const ASPECT_RATIOS = [
+  { label: '16:9', width: 1920, height: 1080 },
+  { label: '4:3', width: 1600, height: 1200 },
+  { label: '1:1', width: 1440, height: 1440 },
+  { label: '3:4', width: 1200, height: 1600 },
+  { label: '9:16', width: 1080, height: 1920 },
+] as const
 
 interface ImageItem {
   file: File
@@ -13,6 +19,7 @@ interface ImageItem {
 
 function App() {
   const [images, setImages] = useState<ImageItem[]>([])
+  const [aspectIndex, setAspectIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -59,13 +66,19 @@ function App() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // White background
-    ctx.fillStyle = '#ffffff'
+    const ratio = ASPECT_RATIOS[aspectIndex]
+    const CANVAS_WIDTH = ratio.width
+    const CANVAS_HEIGHT = ratio.height
+    canvas.width = CANVAS_WIDTH
+    canvas.height = CANVAS_HEIGHT
+
+    // Clean white background
+    ctx.fillStyle = '#fafafa'
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 
     const count = images.length
-    const padding = 40
-    const gap = 30
+    const padding = 80
+    const gap = 60
     const hasAnyCaption = images.some(item => item.caption)
     const captionHeight = hasAnyCaption ? 100 : 0
     const totalGap = gap * (count - 1)
@@ -73,34 +86,96 @@ function App() {
     const slotWidth = availableWidth / count
     const slotHeight = CANVAS_HEIGHT - padding * 2 - captionHeight
 
+    // Phone mockup constants
+    const bezel = 12
+    const cornerRadius = 52
+    const homeBarWidth = 80
+    const homeBarHeight = 4
+
+    const roundRect = (x: number, y: number, w: number, h: number, r: number) => {
+      ctx.beginPath()
+      ctx.moveTo(x + r, y)
+      ctx.lineTo(x + w - r, y)
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+      ctx.lineTo(x + w, y + h - r)
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+      ctx.lineTo(x + r, y + h)
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+      ctx.lineTo(x, y + r)
+      ctx.quadraticCurveTo(x, y, x + r, y)
+      ctx.closePath()
+    }
+
     images.forEach((item, i) => {
       const { img, caption } = item
-      const imgAspect = img.naturalWidth / img.naturalHeight
-      const slotAspect = slotWidth / slotHeight
 
-      let drawWidth: number, drawHeight: number
-      if (imgAspect > slotAspect) {
-        drawWidth = slotWidth
-        drawHeight = slotWidth / imgAspect
+      // Calculate phone frame size based on screenshot aspect ratio
+      const imgAspect = img.naturalWidth / img.naturalHeight
+      const screenSlotWidth = slotWidth - bezel * 2
+      const screenSlotHeight = slotHeight - bezel * 2
+
+      let screenW: number, screenH: number
+      if (imgAspect > screenSlotWidth / screenSlotHeight) {
+        screenW = screenSlotWidth
+        screenH = screenSlotWidth / imgAspect
       } else {
-        drawHeight = slotHeight
-        drawWidth = slotHeight * imgAspect
+        screenH = screenSlotHeight
+        screenW = screenSlotHeight * imgAspect
       }
 
+      const phoneW = screenW + bezel * 2
+      const phoneH = screenH + bezel * 2
       const slotX = padding + i * (slotWidth + gap)
-      const x = slotX + (slotWidth - drawWidth) / 2
-      const y = padding + (slotHeight - drawHeight) / 2
+      const phoneX = slotX + (slotWidth - phoneW) / 2
+      const phoneY = padding + (slotHeight - phoneH) / 2
 
-      ctx.drawImage(img, x, y, drawWidth, drawHeight)
+      // Shadow
+      ctx.save()
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+      ctx.shadowBlur = 30
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 10
+      roundRect(phoneX, phoneY, phoneW, phoneH, cornerRadius)
+      ctx.fillStyle = '#1a1a1a'
+      ctx.fill()
+      ctx.restore()
 
-      // Border
-      ctx.strokeStyle = '#d1d5db'
-      ctx.lineWidth = 2
-      ctx.strokeRect(x, y, drawWidth, drawHeight)
+      // Phone body
+      roundRect(phoneX, phoneY, phoneW, phoneH, cornerRadius)
+      ctx.fillStyle = '#1a1a1a'
+      ctx.fill()
+
+      // Screen area (clipped with rounded corners)
+      const screenX = phoneX + bezel
+      const screenY = phoneY + bezel
+      const innerRadius = cornerRadius - bezel
+      ctx.save()
+      roundRect(screenX, screenY, screenW, screenH, innerRadius)
+      ctx.clip()
+      ctx.drawImage(img, screenX, screenY, screenW, screenH)
+      ctx.restore()
+
+      // Dynamic Island
+      const islandWidth = screenW * 0.28
+      const islandHeight = 20
+      const islandX = phoneX + phoneW / 2 - islandWidth / 2
+      const islandY = screenY + 14
+      ctx.beginPath()
+      ctx.roundRect(islandX, islandY, islandWidth, islandHeight, islandHeight / 2)
+      ctx.fillStyle = '#000000'
+      ctx.fill()
+
+      // Home bar indicator
+      const barX = phoneX + phoneW / 2 - homeBarWidth / 2
+      const barY = phoneY + phoneH - bezel - 10
+      ctx.beginPath()
+      ctx.roundRect(barX, barY, homeBarWidth, homeBarHeight, 2)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+      ctx.fill()
 
       // Caption with word wrap
       if (caption) {
-        ctx.fillStyle = '#6b7280'
+        ctx.fillStyle = '#4b5563'
         ctx.font = '600 36px system-ui, sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'top'
@@ -127,7 +202,7 @@ function App() {
         })
       }
     })
-  }, [images])
+  }, [images, aspectIndex])
 
   useEffect(() => {
     drawCanvas()
@@ -141,7 +216,7 @@ function App() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'screenshots-16x9.png'
+      a.download = `screenshots-${ASPECT_RATIOS[aspectIndex].label.replace(':', 'x')}.png`
       a.click()
       URL.revokeObjectURL(url)
     }, 'image/png')
@@ -173,13 +248,13 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
+    <div className="min-h-screen bg-neutral-950 py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 text-center mb-2">
+        <h1 className="text-3xl font-bold text-white text-center mb-1 tracking-tight">
           Screenshot Combiner
         </h1>
-        <p className="text-gray-500 text-center mb-8">
-          スクショを最大3枚アップロードして、16:9の画像に横並べで出力します
+        <p className="text-neutral-500 text-sm text-center mb-10">
+          Upload up to 3 screenshots and export as a single image
         </p>
 
         {/* Drop zone */}
@@ -188,12 +263,12 @@ function App() {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => images.length < MAX_IMAGES && fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
+          className={`border border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${
             isDragging
-              ? 'border-blue-500 bg-blue-50'
+              ? 'border-violet-500 bg-violet-500/10'
               : images.length >= MAX_IMAGES
-                ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
-                : 'border-gray-300 hover:border-blue-400 hover:bg-gray-100'
+                ? 'border-neutral-800 bg-neutral-900/50 cursor-not-allowed'
+                : 'border-neutral-700 hover:border-neutral-500 hover:bg-neutral-900/50'
           }`}
         >
           <input
@@ -204,41 +279,41 @@ function App() {
             onChange={handleFileSelect}
             className="hidden"
           />
-          <div className="text-gray-400 text-5xl mb-3">+</div>
-          <p className="text-gray-600 font-medium">
+          <div className={`text-4xl mb-3 ${isDragging ? 'text-violet-400' : 'text-neutral-600'}`}>+</div>
+          <p className="text-neutral-400 text-sm">
             {images.length >= MAX_IMAGES
-              ? '最大枚数に達しました'
-              : 'ドラッグ&ドロップ または クリックして画像を選択'}
+              ? 'Maximum number of images reached'
+              : 'Drag & drop or click to select images'}
           </p>
-          <p className="text-gray-400 text-sm mt-1">
-            {images.length} / {MAX_IMAGES} 枚
+          <p className="text-neutral-600 text-xs mt-2">
+            {images.length} / {MAX_IMAGES}
           </p>
         </div>
 
         {/* Thumbnails + Captions */}
         {images.length > 0 && (
-          <div className="flex gap-4 mt-6 justify-center">
+          <div className="flex gap-5 mt-8 justify-center">
             {images.map((item, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
+              <div key={i} className="flex flex-col items-center gap-2.5">
                 <div className="relative group">
                   <img
                     src={item.url}
                     alt={`Screenshot ${i + 1}`}
-                    className="h-32 rounded-lg shadow object-contain bg-white"
+                    className="h-36 rounded-xl object-contain bg-neutral-900 ring-1 ring-neutral-800"
                   />
                   <button
                     onClick={() => removeImage(i)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-2 -right-2 bg-neutral-700 hover:bg-red-500 text-neutral-300 hover:text-white rounded-full w-6 h-6 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
                   >
                     x
                   </button>
                 </div>
                 <input
                   type="text"
-                  placeholder={`キャプション ${i + 1}`}
+                  placeholder={`Caption ${i + 1}`}
                   value={item.caption ?? ''}
                   onChange={(e) => updateCaption(i, e.target.value)}
-                  className="w-36 text-sm text-center border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:border-blue-400"
+                  className="w-36 text-xs text-center text-neutral-300 placeholder-neutral-600 bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-500 transition-colors"
                 />
               </div>
             ))}
@@ -247,22 +322,39 @@ function App() {
 
         {/* Preview */}
         {images.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold text-gray-700 mb-3">プレビュー</h2>
-            <div className="bg-white rounded-xl shadow-lg p-4">
+          <div className="mt-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">Preview</h2>
+              <div className="flex gap-1">
+                {ASPECT_RATIOS.map((ratio, i) => (
+                  <button
+                    key={ratio.label}
+                    onClick={() => setAspectIndex(i)}
+                    className={`px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+                      aspectIndex === i
+                        ? 'bg-violet-600 text-white'
+                        : 'bg-neutral-800 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700'
+                    }`}
+                  >
+                    {ratio.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-2xl overflow-hidden ring-1 ring-neutral-800">
               <canvas
                 ref={canvasRef}
-                width={CANVAS_WIDTH}
-                height={CANVAS_HEIGHT}
-                className="w-full rounded border border-gray-200"
+                width={ASPECT_RATIOS[aspectIndex].width}
+                height={ASPECT_RATIOS[aspectIndex].height}
+                className="w-full"
               />
             </div>
-            <div className="mt-4 text-center">
+            <div className="mt-6 text-center">
               <button
                 onClick={handleDownload}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
+                className="bg-violet-600 hover:bg-violet-500 text-white font-medium py-2.5 px-8 rounded-xl transition-colors text-sm"
               >
-                PNG をダウンロード
+                Download PNG
               </button>
             </div>
           </div>
