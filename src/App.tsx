@@ -65,7 +65,7 @@ function App() {
     })
   }
 
-  const drawCanvas = useCallback(() => {
+  const drawCanvas = useCallback((isTransparent = false) => {
     const canvas = canvasRef.current
     if (!canvas || images.length === 0) return
     const ctx = canvas.getContext('2d')
@@ -77,9 +77,13 @@ function App() {
     canvas.width = CANVAS_WIDTH
     canvas.height = CANVAS_HEIGHT
 
-    // Clean white background
-    ctx.fillStyle = '#fafafa'
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    // Background
+    if (!isTransparent) {
+      ctx.fillStyle = '#fafafa'
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    } else {
+      ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    }
 
     const count = images.length
     const padding = 80
@@ -217,21 +221,25 @@ function App() {
   }, [images, aspectIndex, bezelThickness, phoneScale, bezelXOffset, bezelYOffset, phoneGap])
 
   useEffect(() => {
-    drawCanvas()
+    drawCanvas(false)
   }, [drawCanvas])
 
-  const handleDownload = () => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    canvas.toBlob((blob) => {
-      if (!blob) return
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `screenshots-${ASPECT_RATIOS[aspectIndex].label.replace(':', 'x')}.png`
-      a.click()
-      URL.revokeObjectURL(url)
-    }, 'image/png')
+  const handleDownload = (isTransparent = false) => {
+    drawCanvas(isTransparent)
+    setTimeout(() => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `screenshots-${ASPECT_RATIOS[aspectIndex].label.replace(':', 'x')}${isTransparent ? '-transparent' : ''}.png`
+        a.click()
+        URL.revokeObjectURL(url)
+        drawCanvas(false)
+      }, 'image/png')
+    }, 0)
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -440,12 +448,18 @@ function App() {
                 className="w-full"
               />
             </div>
-            <div className="mt-6 text-center">
+            <div className="mt-6 flex gap-3 justify-center">
               <button
-                onClick={handleDownload}
-                className="bg-violet-600 hover:bg-violet-500 text-white font-medium py-2.5 px-8 rounded-xl transition-colors text-sm"
+                onClick={() => handleDownload(false)}
+                className="bg-violet-600 hover:bg-violet-500 text-white font-medium py-2.5 px-6 rounded-xl transition-colors text-sm"
               >
                 Download PNG
+              </button>
+              <button
+                onClick={() => handleDownload(true)}
+                className="bg-neutral-700 hover:bg-neutral-600 text-white font-medium py-2.5 px-6 rounded-xl transition-colors text-sm"
+              >
+                Download PNG (Transparent)
               </button>
             </div>
           </div>
