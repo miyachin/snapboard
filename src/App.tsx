@@ -14,7 +14,6 @@ interface ImageItem {
   file: File
   url: string
   img: HTMLImageElement
-  caption: string
 }
 
 function App() {
@@ -34,7 +33,7 @@ function App() {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file)
       const img = new Image()
-      img.onload = () => resolve({ file, url, img, caption: '' })
+      img.onload = () => resolve({ file, url, img })
       img.onerror = reject
       img.src = url
     })
@@ -52,10 +51,6 @@ function App() {
       return next
     })
   }, [images.length])
-
-  const updateCaption = (index: number, caption: string) => {
-    setImages(prev => prev.map((item, i) => i === index ? { ...item, caption } : item))
-  }
 
   const removeImage = (index: number) => {
     setImages(prev => {
@@ -89,12 +84,10 @@ function App() {
     const count = images.length
     const padding = 80
     const gap = phoneGap
-    const hasAnyCaption = images.some(item => item.caption)
-    const captionHeight = hasAnyCaption ? 100 : 0
     const totalGap = gap * (count - 1)
     const availableWidth = CANVAS_WIDTH - padding * 2 - totalGap
     const slotWidth = availableWidth / count
-    const slotHeight = CANVAS_HEIGHT - padding * 2 - captionHeight
+    const slotHeight = CANVAS_HEIGHT - padding * 2
 
     // Phone mockup constants
     const bezel = bezelThickness
@@ -141,8 +134,6 @@ function App() {
       const phoneH = scaledScreenH + scaledBezel * 2
 
       return {
-        screenW,
-        screenH,
         phoneW,
         phoneH,
         scaledBezel,
@@ -157,7 +148,7 @@ function App() {
     const centerOffsetX = (CANVAS_WIDTH - totalPhoneWidth) / 2
 
     images.forEach((item, i) => {
-      const { img, caption } = item
+      const { img } = item
       const dim = phoneDimensions[i]
       const { phoneW, phoneH, scaledBezel, scaledScreenW, scaledScreenH, scaledCornerRadius } = dim
 
@@ -210,34 +201,6 @@ function App() {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
       ctx.fill()
 
-      // Caption with word wrap
-      if (caption) {
-        ctx.fillStyle = '#4b5563'
-        ctx.font = '600 36px system-ui, sans-serif'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'top'
-
-        const maxWidth = slotWidth - 20
-        const lineHeight = 44
-        const lines: string[] = []
-        let currentLine = ''
-
-        for (const char of caption) {
-          const testLine = currentLine + char
-          if (ctx.measureText(testLine).width > maxWidth && currentLine) {
-            lines.push(currentLine)
-            currentLine = char
-          } else {
-            currentLine = testLine
-          }
-        }
-        if (currentLine) lines.push(currentLine)
-
-        const startY = padding + slotHeight + 32
-        lines.forEach((line, li) => {
-          ctx.fillText(line, phoneX + phoneW / 2, startY + li * lineHeight)
-        })
-      }
     })
   }, [images, aspectIndex, bezelThickness, phoneScale, bezelXOffset, bezelYOffset, phoneGap, bezelColor])
 
@@ -289,12 +252,12 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 py-12 px-4">
+    <div className="min-h-screen bg-neutral-950 py-6 sm:py-12 px-3 sm:px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-1 tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-1 tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
           SnapBoard
         </h1>
-        <p className="text-neutral-500 text-sm text-center mb-10">
+        <p className="text-neutral-500 text-xs sm:text-sm text-center mb-6 sm:mb-10">
           Combine screenshots into beautiful mockups
         </p>
 
@@ -304,7 +267,7 @@ function App() {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => images.length < MAX_IMAGES && fileInputRef.current?.click()}
-          className={`border border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${
+          className={`border border-dashed rounded-2xl p-6 sm:p-12 text-center cursor-pointer transition-all ${
             isDragging
               ? 'border-violet-500 bg-violet-500/10'
               : images.length >= MAX_IMAGES
@@ -331,33 +294,24 @@ function App() {
           </p>
         </div>
 
-        {/* Thumbnails + Captions */}
+        {/* Thumbnails */}
         {images.length > 0 && (
-          <div className="flex gap-5 mt-8 justify-center">
+          <div className="flex gap-3 sm:gap-5 mt-8 justify-center">
             {images.map((item, i) => (
-              <div key={i} className="flex flex-col items-center gap-2.5">
-                <div className="relative group">
-                  <img
-                    src={item.url}
-                    alt={`Screenshot ${i + 1}`}
-                    className="h-36 rounded-xl object-contain bg-neutral-900 ring-1 ring-neutral-800 transition-transform duration-200 group-hover:-rotate-1 group-hover:scale-105"
-                  />
-                  <button
-                    onClick={() => removeImage(i)}
-                    className="absolute -top-2 -right-2 bg-neutral-700 hover:bg-red-500 text-neutral-300 hover:text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  placeholder={`Caption ${i + 1}`}
-                  value={item.caption ?? ''}
-                  onChange={(e) => updateCaption(i, e.target.value)}
-                  className="w-36 text-xs text-center text-neutral-300 placeholder-neutral-600 bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-500 transition-colors"
+              <div key={i} className="relative group">
+                <img
+                  src={item.url}
+                  alt={`Screenshot ${i + 1}`}
+                  className="h-24 sm:h-36 rounded-xl object-contain bg-neutral-900 ring-1 ring-neutral-800 transition-transform duration-200 group-hover:-rotate-1 group-hover:scale-105"
                 />
+                <button
+                  onClick={() => removeImage(i)}
+                  className="absolute -top-2 -right-2 bg-neutral-700 hover:bg-red-500 text-neutral-300 hover:text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             ))}
           </div>
@@ -366,14 +320,14 @@ function App() {
         {/* Preview */}
         {images.length > 0 && (
           <div className="mt-10">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
               <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">Preview</h2>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-wrap">
                 {ASPECT_RATIOS.map((ratio, i) => (
                   <button
                     key={ratio.label}
                     onClick={() => setAspectIndex(i)}
-                    className={`px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+                    className={`px-2.5 sm:px-3 py-1 text-xs rounded-lg font-medium transition-all ${
                       aspectIndex === i
                         ? 'bg-violet-600 text-white'
                         : 'bg-neutral-800 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700'
@@ -528,7 +482,7 @@ function App() {
                 className="w-full"
               />
             </div>
-            <div className="mt-6 flex gap-3 justify-center">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => handleDownload(false)}
                 className="bg-violet-600 hover:bg-violet-500 text-white font-medium py-2.5 px-6 rounded-xl transition-colors text-sm"
