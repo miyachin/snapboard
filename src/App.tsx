@@ -253,13 +253,20 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-950 py-6 sm:py-12 px-3 sm:px-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-1 tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
-          SnapBoard
-        </h1>
-        <p className="text-neutral-500 text-xs sm:text-sm text-center mb-6 sm:mb-10">
-          Combine screenshots into beautiful mockups
-        </p>
+      <main className="max-w-4xl mx-auto">
+        <header className="text-center mb-6 sm:mb-10">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1 tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
+            SnapBoard
+          </h1>
+          <p className="text-neutral-500 text-xs sm:text-sm">
+            Combine screenshots into beautiful phone mockups — free, no sign-up
+          </p>
+        </header>
+        {/* Hidden SEO content for crawlers */}
+        <div className="sr-only" aria-hidden="false">
+          <h2>Free Screenshot Combiner &amp; Phone Mockup Generator</h2>
+          <p>SnapBoard lets you combine up to 3 screenshots into a single image with realistic iPhone-style device frames. Customize bezel thickness, color, phone gap, and size. Choose from multiple aspect ratios including 16:9, 4:3, 1:1, 3:4, and 9:16. Export as PNG or transparent PNG. Perfect for App Store screenshots, portfolio mockups, social media posts, and product presentations. Runs entirely in your browser with no uploads and no sign-up required.</p>
+        </div>
 
         {/* Drop zone */}
         <div
@@ -498,7 +505,12 @@ function App() {
             </div>
           </div>
         )}
-      </div>
+      </main>
+      <footer className="max-w-4xl mx-auto mt-12 pt-6 border-t border-neutral-900 text-center">
+        <p className="text-neutral-600 text-xs">
+          © {new Date().getFullYear()} SnapBoard · Free screenshot mockup tool · No uploads, 100% in-browser
+        </p>
+      </footer>
     </div>
   )
 }
