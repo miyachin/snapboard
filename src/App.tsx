@@ -255,7 +255,7 @@ function App() {
     <div className="min-h-screen bg-neutral-950 py-6 sm:py-12 px-3 sm:px-4">
       <main className="max-w-4xl mx-auto">
         <header className="text-center mb-6 sm:mb-10">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-1 tracking-tight bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1 tracking-tight bg-gradient-to-r from-violet-400 via-purple-400 to-violet-400 bg-clip-text text-transparent">
             SnapBoard
           </h1>
           <p className="text-neutral-500 text-xs sm:text-sm">
@@ -279,7 +279,7 @@ function App() {
               ? 'border-violet-500 bg-violet-500/10'
               : images.length >= MAX_IMAGES
                 ? 'border-neutral-800 bg-neutral-900/50 cursor-not-allowed'
-                : 'border-neutral-700 hover:border-neutral-500 hover:bg-neutral-900/50'
+                : 'border-neutral-800 hover:border-neutral-600 hover:bg-neutral-900/50'
           }`}
         >
           <input
@@ -290,8 +290,8 @@ function App() {
             onChange={handleFileSelect}
             className="hidden"
           />
-          <div className={`text-4xl mb-3 transition-transform ${isDragging ? 'text-violet-400 scale-125' : 'text-neutral-600 animate-pulse'}`}>+</div>
-          <p className="text-neutral-400 text-sm">
+          <div className={`text-4xl mb-3 transition-transform ${isDragging ? 'text-violet-400 scale-125' : 'text-neutral-500 animate-pulse'}`}>+</div>
+          <p className="text-neutral-300 text-sm">
             {images.length >= MAX_IMAGES
               ? 'Maximum number of images reached'
               : 'Drag & drop or click to select images'}
@@ -313,7 +313,7 @@ function App() {
                 />
                 <button
                   onClick={() => removeImage(i)}
-                  className="absolute -top-2 -right-2 bg-neutral-700 hover:bg-red-500 text-neutral-300 hover:text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                  className="absolute -top-2 -right-2 bg-neutral-800 hover:bg-red-500 text-neutral-500 hover:text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -328,7 +328,7 @@ function App() {
         {images.length > 0 && (
           <div className="mt-10">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-              <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">Preview</h2>
+              <h2 className="text-sm font-medium text-neutral-500 uppercase tracking-wider">Preview</h2>
               <div className="flex gap-1 flex-wrap">
                 {ASPECT_RATIOS.map((ratio, i) => (
                   <button
@@ -336,7 +336,7 @@ function App() {
                     onClick={() => setAspectIndex(i)}
                     className={`px-2.5 sm:px-3 py-1 text-xs rounded-lg font-medium transition-all ${
                       aspectIndex === i
-                        ? 'bg-violet-600 text-white'
+                        ? 'bg-violet-500 text-white'
                         : 'bg-neutral-800 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700'
                     }`}
                   >
@@ -349,7 +349,7 @@ function App() {
             {/* Controls */}
             <div className="mb-6 p-4 bg-neutral-900 rounded-xl border border-neutral-800 space-y-3">
               <div>
-                <label className="text-xs text-neutral-400 font-medium">Bezel Thickness</label>
+                <label className="text-xs text-neutral-500 font-medium">Bezel Thickness</label>
                 <div className="flex items-center gap-3 mt-1">
                   <input
                     type="range"
@@ -363,7 +363,7 @@ function App() {
                   <span className="text-xs text-neutral-500 w-12">{bezelThickness}px</span>
                   <button
                     onClick={() => setBezelThickness(10)}
-                    className="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+                    className="text-neutral-600 hover:text-neutral-300 transition-colors p-1"
                     title="Reset to default"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,19 +373,19 @@ function App() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-neutral-400 font-medium">Bezel Color</label>
+                <label className="text-xs text-neutral-500 font-medium">Bezel Color</label>
                 <div className="flex items-center gap-3 mt-1">
                   <input
                     type="color"
                     value={bezelColor}
                     onChange={(e) => setBezelColor(e.target.value)}
-                    className="h-8 w-12 rounded cursor-pointer border border-neutral-600"
+                    className="h-8 w-12 rounded cursor-pointer border border-neutral-800"
                   />
                   <span className="text-xs text-neutral-500 font-mono flex-1">{bezelColor}</span>
                 </div>
               </div>
               <div>
-                <label className="text-xs text-neutral-400 font-medium">Phone Gap</label>
+                <label className="text-xs text-neutral-500 font-medium">Phone Gap</label>
                 <div className="flex items-center gap-3 mt-1">
                   <input
                     type="range"
@@ -399,7 +399,7 @@ function App() {
                   <span className="text-xs text-neutral-500 w-12">{phoneGap > 0 ? '+' : ''}{phoneGap}px</span>
                   <button
                     onClick={() => setPhoneGap(50)}
-                    className="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+                    className="text-neutral-600 hover:text-neutral-300 transition-colors p-1"
                     title="Reset to default"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -409,7 +409,7 @@ function App() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-neutral-400 font-medium">Phone Size</label>
+                <label className="text-xs text-neutral-500 font-medium">Phone Size</label>
                 <div className="flex items-center gap-3 mt-1">
                   <input
                     type="range"
@@ -423,7 +423,7 @@ function App() {
                   <span className="text-xs text-neutral-500 w-12">{(phoneScale * 100).toFixed(0)}%</span>
                   <button
                     onClick={() => setPhoneScale(1)}
-                    className="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+                    className="text-neutral-600 hover:text-neutral-300 transition-colors p-1"
                     title="Reset to default"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -433,7 +433,7 @@ function App() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-neutral-400 font-medium">Position (Horizontal)</label>
+                <label className="text-xs text-neutral-500 font-medium">Position (Horizontal)</label>
                 <div className="flex items-center gap-3 mt-1">
                   <input
                     type="range"
@@ -447,7 +447,7 @@ function App() {
                   <span className="text-xs text-neutral-500 w-12">{bezelXOffset > 0 ? '+' : ''}{bezelXOffset}px</span>
                   <button
                     onClick={() => setBezelXOffset(0)}
-                    className="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+                    className="text-neutral-600 hover:text-neutral-300 transition-colors p-1"
                     title="Reset to default"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,7 +457,7 @@ function App() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-neutral-400 font-medium">Position (Vertical)</label>
+                <label className="text-xs text-neutral-500 font-medium">Position (Vertical)</label>
                 <div className="flex items-center gap-3 mt-1">
                   <input
                     type="range"
@@ -471,7 +471,7 @@ function App() {
                   <span className="text-xs text-neutral-500 w-12">{bezelYOffset > 0 ? '+' : ''}{bezelYOffset}px</span>
                   <button
                     onClick={() => setBezelYOffset(0)}
-                    className="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+                    className="text-neutral-600 hover:text-neutral-300 transition-colors p-1"
                     title="Reset to default"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,13 +492,13 @@ function App() {
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => handleDownload(false)}
-                className="bg-violet-600 hover:bg-violet-500 text-white font-medium py-2.5 px-6 rounded-xl transition-colors text-sm"
+                className="bg-violet-500 hover:bg-violet-400 text-white font-medium py-2.5 px-6 rounded-xl transition-colors text-sm"
               >
                 Download PNG
               </button>
               <button
                 onClick={() => handleDownload(true)}
-                className="bg-neutral-700 hover:bg-neutral-600 text-white font-medium py-2.5 px-6 rounded-xl transition-colors text-sm"
+                className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white font-medium py-2.5 px-6 rounded-xl transition-colors text-sm"
               >
                 Download PNG (Transparent)
               </button>
@@ -506,7 +506,7 @@ function App() {
           </div>
         )}
       </main>
-      <footer className="max-w-4xl mx-auto mt-12 pt-6 border-t border-neutral-900 text-center">
+      <footer className="max-w-4xl mx-auto mt-12 pt-6 border-t border-neutral-800 text-center">
         <p className="text-neutral-600 text-xs">
           © {new Date().getFullYear()} SnapBoard · Free screenshot mockup tool · No uploads, 100% in-browser
         </p>
